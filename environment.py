@@ -1,5 +1,5 @@
 from gymnasium.envs.registration import register
-import gymnasium as gym
+
 
 # Register custom environments
 def register_env():

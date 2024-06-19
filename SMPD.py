@@ -6,12 +6,12 @@ from utils.step import run_episode, explore
 from manager import Manager
 
 
-def SMDP(env, num_regions, num_actions, num_episodes, tasks):
+def SMDP(env, num_regions, num_actions, num_episodes, tasks, device):
     
     size = env.unwrapped.width
     Region_bound = create_regions(size, num_regions)
     print(Region_bound)
-    manager = Manager(num_regions, num_actions, tasks)
+    manager = Manager(num_regions, num_actions, tasks, device)
     rand_seed = random.randint(1, 100)
     key = env.key
     door = env.door
@@ -37,12 +37,11 @@ def SMDP(env, num_regions, num_actions, num_episodes, tasks):
             door = env.door
             if task == 0 and key:
                 task = 1
-            if task == 1 and door:
+            elif task == 1 and door:
                 task = 2
 
-
-            region_num_states =  (Region_bound[region][1][1] - Region_bound[region][0][1] + 1) * (Region_bound[region][1][0] - Region_bound[region][0][0] + 1)
             region = compression_function(state, Region_bound)
+            region_num_states =  (Region_bound[region][1][1] - Region_bound[region][0][1] + 1) * (Region_bound[region][1][0] - Region_bound[region][0][0] + 1)
             sqrt_num = int(np.sqrt(region_num_states))
             if sqrt_num * sqrt_num != region_num_states:
                 print("Error regions not perfect sqrt")
@@ -59,7 +58,6 @@ def SMDP(env, num_regions, num_actions, num_episodes, tasks):
                 transitions, reward, current_state, done, actual_end_region, steps= run_episode(env, state, worker, goal_region, region, region_num_states, Region_bound, task, total_steps_iteration)
                 total_steps_iteration += steps
                 
-
                 if actual_end_region != goal_region and actual_end_region != region:
                     manager.add_option(region, actual_end_region, task)
                     if actual_end_region > num_regions:
@@ -80,11 +78,7 @@ def SMDP(env, num_regions, num_actions, num_episodes, tasks):
                     worker = manager.get_create_region_option(region, goal_region, region_num_states, num_actions)
             total_steps += steps
             total_reward += reward
-            #if reward >= 0.9:
-                #print("end region", actual_end_region)
-                #print("goal region", goal_region)
-                #print("reward", reward)
-                #print(transitions)
+
             if transitions:
                 worker.train(transitions)
                 for _ in range(4):

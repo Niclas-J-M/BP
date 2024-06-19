@@ -3,14 +3,11 @@ from __future__ import annotations
 from minigrid.core.constants import COLOR_NAMES
 from minigrid.core.grid import Grid
 from minigrid.core.mission import MissionSpace
-from minigrid.core.actions import Actions
 from minigrid.core.world_object import Door, Goal, Key, Wall
-from minigrid.manual_control import ManualControl
 from minigrid.minigrid_env import MiniGridEnv
 from gymnasium.envs import register
 import gymnasium as gym
-import numpy as np
-import random
+
 
 
 UP = 0

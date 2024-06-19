@@ -1,11 +1,19 @@
 import gymnasium as gym
 from minigrid.wrappers import NESWActionsImage
 from SMPD import SMDP
-from environment import register_env
 import numpy as np
 from utils.utils import plot_rewards, plot_steps
 from gymnasium.envs.registration import register
+import torch
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+
+# Ensure that PyTorch recognizes the GPU
+if device.type == 'cuda':
+    print(f"CUDA is available. GPU device name: {torch.cuda.get_device_name(0)}")
+else:
+    print("CUDA is not available. Running on CPU.")
 
 
 register(
@@ -27,9 +35,9 @@ def main():
     all_rewards = []
     all_steps = []
 
-    num_runs = 5
+    num_runs = 4
     for _ in range(num_runs):
-        total_steps, total_rewards = SMDP(env, num_regions, num_actions, num_episodes, tasks)
+        total_steps, total_rewards = SMDP(env, num_regions, num_actions, num_episodes, tasks, device)
         all_rewards.append(total_rewards)
         all_steps.append(total_steps)
     
