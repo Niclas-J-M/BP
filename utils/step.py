@@ -64,12 +64,15 @@ def run_episode(env, state, worker, end_region, initial_region, num_states, Regi
             current_state = next_state_coord
             done = True
             if current_region == end_region:
+                #print("well done", end_region)
+                actual_end_region = end_region
                 reward = 0.8
             else:
                 reward = 0.8
                 actual_end_region = current_region
-            next_state_vector = state_vector
+            next_state_vector = state_vector # set the next position to be the same position
             transitions.append((state_vector, action, reward, next_state_vector, done))
+            #print("actual", actual_end_region)
             return transitions, total_reward, current_state, final_done, actual_end_region, steps
             
 
@@ -77,13 +80,9 @@ def run_episode(env, state, worker, end_region, initial_region, num_states, Regi
 
         transitions.append((state_vector, action, reward, next_state_vector, done))
         state_vector = next_state_vector
-  
 
-    
     if not done and total_steps_iteration >= 100:
-        transitions.append((state_vector, action, -0.1, state_vector, True))
-        final_done = False
-        actual_end_region = initial_region
+        total_reward -= 0.1
 
     return transitions, total_reward, current_state, final_done, actual_end_region, steps
 

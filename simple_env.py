@@ -62,7 +62,8 @@ class SimpleEnv(MiniGridEnv):
 
         # Add surrounding walls
         self.grid.wall_rect(0, 0, width, height)
-        #self.grid.vert_wall(3, 2, 3)
+        self.grid.vert_wall(3, 1, 5)
+        self.grid.vert_wall(5, 2, 5)
 
         self.put_obj(Goal(), width - 2, height - 2)
         self.agent_pos = (1, 1)

@@ -28,6 +28,7 @@ def SMDP(env, num_regions, num_actions, num_episodes, tasks, device):
         total_steps_iteration = 0
         
         region = compression_function(state, Region_bound)
+        print("Spawn Region", region)
         manager.add_region(region, task)
 
 
@@ -59,11 +60,13 @@ def SMDP(env, num_regions, num_actions, num_episodes, tasks, device):
                 total_steps_iteration += steps
                 
                 if actual_end_region != goal_region and actual_end_region != region:
-                    manager.add_option(region, actual_end_region, task)
-                    if actual_end_region > num_regions:
-                        worker = manager.get_create_task_option(region, actual_end_region, region_num_states, num_actions, task)
-                    else:
-                        worker = manager.get_create_region_option(region, actual_end_region, region_num_states, num_actions)
+                    if actual_end_region not in manager.Q[task][initial_region]:
+                        manager.add_option(region, actual_end_region, task)
+                        if actual_end_region > num_regions:
+                            worker = manager.get_create_task_option(region, actual_end_region, region_num_states, num_actions, task)
+                        else:
+                            worker = manager.get_create_region_option(region, actual_end_region, region_num_states, num_actions)
+                
             else:
                 transitions, reward, initial_region, goal_region, current_state, done, steps = explore(env, state, region, region_num_states, task, Region_bound)
                 
@@ -91,6 +94,8 @@ def SMDP(env, num_regions, num_actions, num_episodes, tasks, device):
                 option = actual_end_region
                 goal_region = region
 
+                
+
             manager.update_policy(task, region, option, reward, goal_region) 
             state = current_state
 
@@ -102,8 +107,8 @@ def SMDP(env, num_regions, num_actions, num_episodes, tasks, device):
                 break
         
         print_q_table(manager.Q)
-        print(episodes)
-        print(total_steps)
+        print("Episodes", episodes)
+        print("total steps", total_steps)
         #print(manager.epsilon)
         
         total_steps_per_episode.append(total_steps)

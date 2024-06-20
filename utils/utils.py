@@ -56,9 +56,10 @@ def print_q_table(q_table):
         print()
 
 
-def plot_steps(steps):
+def plot_steps(steps, std_steps):
     plt.figure(figsize=(10, 5))
-    plt.plot(steps, label='Total Steps per Episode')
+    plt.plot(steps, label='Average Total Steps per Episode')
+    plt.fill_between(range(len(steps)), steps - std_steps, steps + std_steps, alpha=0.2, label='Standard Deviation')
     plt.xlabel('Episode')
     plt.ylabel('Total Steps')
     plt.title('Total Steps Over Episodes')
@@ -66,9 +67,10 @@ def plot_steps(steps):
     plt.grid(True)
     plt.show()
 
-def plot_rewards(total_rewards):
+def plot_rewards(total_rewards, std_rewards):
     plt.figure(figsize=(10, 5))
-    plt.plot(total_rewards, label='Total Rewards per Episode')
+    plt.plot(total_rewards, label='Average Total Rewards per Episode')
+    plt.fill_between(range(len(total_rewards)), total_rewards - std_rewards, total_rewards + std_rewards, alpha=0.2, label='Standard Deviation')
     plt.xlabel('Episode')
     plt.ylabel('Total Rewards')
     plt.title('Total Rewards Over Episodes')

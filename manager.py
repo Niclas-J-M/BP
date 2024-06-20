@@ -34,7 +34,7 @@ class Manager:
             else: return
         else: return
 
-        max_next_q = np.max(list(self.Q[task][next_region].values())) if self.Q[task][next_region] else 0.0  # Get the max Q-value for the next region or 0 if empty
+        max_next_q = np.max(list(self.Q[task][next_region].values())) # Get the max Q-value for the next region or 0 if empty
         td_error = reward + self.gamma * max_next_q - self.Q[task][region][option]
         self.Q[task][region][option] += self.alpha * td_error
 
@@ -59,7 +59,8 @@ class Manager:
     def add_option(self, initital_region, goal_region, task):
         if goal_region < self.num_states + 1:
             for n_task in self.tasks:
-                self.Q[n_task][initital_region][goal_region] = 0.0
+                if initital_region != goal_region:
+                    self.Q[n_task][initital_region][goal_region] = 0.0
         else:
             self.Q[task][initital_region][goal_region] = 0.0
         
