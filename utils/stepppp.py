@@ -7,7 +7,7 @@ actions to be 0:N, 1:E, 2:S, 3:W
 """
 
 
-def run_episode(env, state, worker, end_region, initial_region, num_states, Region_bound, task, total_steps_iteration, option_idx, step_limit=6):
+def run_episode(env, state, worker, end_region, initial_region, num_states, Region_bound, task, total_steps_iteration, step_limit=6):
     state_vector = coord_to_state(state, num_states, Region_bound)
     done = False
     final_done = False
@@ -23,8 +23,9 @@ def run_episode(env, state, worker, end_region, initial_region, num_states, Regi
             action = random.randint(0, 3)
         else:
             # Choose the action suggested by the worker the rest of the time (80%)
-            action = worker.select_action(state_vector, option_idx)
+            action = worker.select_action(state_vector)
         next_state_coord, reward, done, _ = env.step(action)
+        #print(reward)
         steps += 1
         key = env.key
         door = env.door

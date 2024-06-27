@@ -18,7 +18,7 @@ LEFT = 3
 class SimpleEnv(MiniGridEnv):
     def __init__(
         self,
-        size=8,
+        size=13,
         agent_start_pos=(1, 1),
         agent_start_dir=0,
         max_steps: int | None = None,
@@ -62,8 +62,28 @@ class SimpleEnv(MiniGridEnv):
 
         # Add surrounding walls
         self.grid.wall_rect(0, 0, width, height)
-        self.grid.vert_wall(3, 1, 5)
-        self.grid.vert_wall(5, 2, 5)
+        self.grid.vert_wall(4, 1, 1)
+        self.grid.vert_wall(8, 1, 1)
+        self.grid.vert_wall(4, 11, 1)
+        self.grid.vert_wall(8, 11, 1)
+
+        self.grid.vert_wall(4, 3, 3)
+        self.grid.vert_wall(8, 3, 3)
+
+        self.grid.vert_wall(4, 7, 3)
+        self.grid.vert_wall(8, 7, 3)
+
+        self.grid.vert_wall(1, 4, 1)
+        self.grid.vert_wall(1, 8, 1)
+        self.grid.vert_wall(11, 4, 1)
+        self.grid.vert_wall(11, 8, 1)
+
+        self.grid.horz_wall(3, 4, 3)
+        self.grid.horz_wall(7, 4, 3)
+
+        self.grid.horz_wall(3, 8, 3)
+        self.grid.horz_wall(7, 8, 3)
+        
 
         self.put_obj(Goal(), width - 2, height - 2)
         self.agent_pos = (1, 1)

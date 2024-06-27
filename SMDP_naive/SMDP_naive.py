@@ -3,7 +3,7 @@ import random
 from utils.utils import compression_function, print_q_table, plot_steps, plot_rewards
 from utils.grid_generation import create_regions
 from utils.step import run_episode, explore
-from NaiveManager import NaiveManager
+from SMDP_naive.NaiveManager import NaiveManager
 
 
 def SMDP_naive(env, num_regions, num_actions, num_episodes, tasks, device):
@@ -23,6 +23,7 @@ def SMDP_naive(env, num_regions, num_actions, num_episodes, tasks, device):
         state = env.reset(seed=rand_seed)
         task = 0
         total_steps = 0
+        intended_transitions = []
         total_reward = 0
         total_steps_iteration = 0
         
@@ -54,7 +55,7 @@ def SMDP_naive(env, num_regions, num_actions, num_episodes, tasks, device):
                 else:
                     worker = manager.get_create_region_option(region, region_num_states, num_actions)
 
-                transitions, reward, current_state, done, actual_end_region, steps= run_episode(env, state, worker, goal_region, region, region_num_states, Region_bound, task, total_steps_iteration)
+                transitions, intended_transitions, reward, current_state, done, actual_end_region, steps, total_steps_iteration = run_episode(env, state, worker, goal_region, region, region_num_states, Region_bound, task, total_steps_iteration)
                 total_steps_iteration += steps
 
                 if actual_end_region != goal_region and actual_end_region != region:
@@ -76,6 +77,11 @@ def SMDP_naive(env, num_regions, num_actions, num_episodes, tasks, device):
             total_steps += steps
             total_reward += reward
 
+            if intended_transitions:
+                worker.train(intended_transitions)
+                for _ in range(4):
+                    worker.train_sil()
+
             if transitions:
                 worker.train(transitions)
                 for _ in range(4):
@@ -94,7 +100,7 @@ def SMDP_naive(env, num_regions, num_actions, num_episodes, tasks, device):
             if done or total_steps > 300: 
                 total_rewad_per_episode.append(total_reward)
                 break
-        
+        print("SMDP naive")
         print_q_table(manager.Q)
         print("Episodes", episodes)
         print("total steps", total_steps)

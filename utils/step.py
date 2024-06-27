@@ -11,6 +11,7 @@ def run_episode(env, state, worker, end_region, initial_region, num_states, Regi
     state_vector = coord_to_state(state, num_states, Region_bound)
     done = False
     final_done = False
+    intended_transitions = []
     transitions = []
     total_reward = 0
     steps = 0
@@ -25,7 +26,6 @@ def run_episode(env, state, worker, end_region, initial_region, num_states, Regi
             # Choose the action suggested by the worker the rest of the time (80%)
             action = worker.select_action(state_vector)
         next_state_coord, reward, done, _ = env.step(action)
-        #print(reward)
         steps += 1
         key = env.key
         door = env.door
@@ -36,7 +36,8 @@ def run_episode(env, state, worker, end_region, initial_region, num_states, Regi
                 next_state_vector = coord_to_state(next_state_coord, num_states, Region_bound)
                 transitions.append((state_vector, action, total_reward, next_state_vector, done))
                 actual_end_region = 101
-                return transitions, total_reward, next_state_coord, final_done, actual_end_region, steps
+                total_steps_iteration = 0
+                return transitions, intended_transitions, total_reward, next_state_coord, final_done, actual_end_region, steps, total_steps_iteration
         elif task == 1:
             if door:
                 total_reward = 1
@@ -44,7 +45,8 @@ def run_episode(env, state, worker, end_region, initial_region, num_states, Regi
                 next_state_vector = coord_to_state(next_state_coord, num_states, Region_bound)
                 transitions.append((state_vector, action, total_reward, next_state_vector, done))
                 actual_end_region = 102
-                return transitions, total_reward, next_state_coord, final_done, actual_end_region, steps
+                total_steps_iteration = 0
+                return transitions, intended_transitions, total_reward, next_state_coord, final_done, actual_end_region, steps, total_steps_iteration
         elif task == 2:
             if done:
                 final_done = True
@@ -53,7 +55,8 @@ def run_episode(env, state, worker, end_region, initial_region, num_states, Regi
                 next_state_vector = coord_to_state(next_state_coord, num_states, Region_bound)
                 transitions.append((state_vector, action, total_reward, next_state_vector, done))
                 actual_end_region = 103
-                return transitions, total_reward, next_state_coord, final_done, actual_end_region, steps
+                total_steps_iteration = 0
+                return transitions, intended_transitions, total_reward, next_state_coord, final_done, actual_end_region, steps, total_steps_iteration
 
 
         current_region = compression_function(next_state_coord, Region_bound)
@@ -62,29 +65,34 @@ def run_episode(env, state, worker, end_region, initial_region, num_states, Regi
         # Termination of option
         if current_region != initial_region:
             current_state = next_state_coord
+            total_steps_iteration = 0
             done = True
+            next_state_vector = state_vector
             if current_region == end_region:
                 #print("well done", end_region)
                 actual_end_region = end_region
                 reward = 0.8
+                transitions.append((state_vector, action, reward, next_state_vector, done))
             else:
+                original_reward = -0.1
                 reward = 0.8
+                intended_transitions = transitions.copy()
+                transitions.append((state_vector, action, reward, next_state_vector, done))
+                intended_transitions.append((state_vector, action, original_reward, next_state_vector, done))
                 actual_end_region = current_region
-            next_state_vector = state_vector # set the next position to be the same position
-            transitions.append((state_vector, action, reward, next_state_vector, done))
-            #print("actual", actual_end_region)
-            return transitions, total_reward, current_state, final_done, actual_end_region, steps
-            
-
+            return transitions, intended_transitions, total_reward, current_state, final_done, actual_end_region, steps, total_steps_iteration
+        
         next_state_vector = coord_to_state(next_state_coord, num_states, Region_bound)
+        
+        if not done and total_steps_iteration >= 100:
+            total_reward -= 0.1
+            total_steps_iteration = 0
 
+        #print("how often are you used")
         transitions.append((state_vector, action, reward, next_state_vector, done))
         state_vector = next_state_vector
 
-    if not done and total_steps_iteration >= 100:
-        total_reward -= 0.1
-
-    return transitions, total_reward, current_state, final_done, actual_end_region, steps
+    return transitions, intended_transitions, total_reward, current_state, final_done, actual_end_region, steps, total_steps_iteration
 
 
 def explore(env, state, initial_region, num_states, task, Region_bound, step_limit=6):

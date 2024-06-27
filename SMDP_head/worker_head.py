@@ -1,6 +1,6 @@
 import torch
 import torch.optim as optim
-from shared_networks import DynamicPolicyNetwork, DynamicValueNetwork
+from SMDP_head.shared_networks import DynamicPolicyNetwork, DynamicValueNetwork
 from utils.prioritized_memory import Memory
 import numpy as np
 
@@ -11,8 +11,8 @@ class Worker_Head:
         self.value_net = DynamicValueNetwork(input_dim, device).to(device)
         self.policy_optimizer = optim.Adam(self.policy_net.parameters(), lr=0.0007)
         self.value_optimizer = optim.Adam(self.value_net.parameters(), lr=0.0007)
-        self.memory = Memory(5000)  # Capacity
-        self.batch_size = 256
+        self.memory = Memory(10000)  # Capacity
+        self.batch_size = 512
         self.gamma = gamma
         self.value_loss_weight = 0.01
         self.policy_losses = []

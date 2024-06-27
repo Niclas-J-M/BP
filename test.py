@@ -1,6 +1,6 @@
 import torch
-from worker_head import Worker_Head
-from manager_head import Manager_Head
+from BP.SMDP_head.worker_head import Worker_Head
+from BP.SMDP_head.manager_head import Manager_Head
 
 # Define device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

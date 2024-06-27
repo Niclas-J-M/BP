@@ -2,8 +2,8 @@ import numpy as np
 import random
 from utils.utils import compression_function, print_q_table
 from utils.grid_generation import create_regions
-from utils.step2 import run_episode, explore
-from manager_head import Manager_Head
+from utils.step_head import run_episode, explore
+from SMDP_head.manager_head import Manager_Head
 
 def SMDP_head(env, num_regions, num_actions, num_episodes, tasks, device):
     
@@ -30,6 +30,9 @@ def SMDP_head(env, num_regions, num_actions, num_episodes, tasks, device):
 
         while True:
             actual_end_region = 0
+            intended_transitions = []
+            intended_worker = None
+            option_intended_idx = None
             key = env.key
             door = env.door
             if task == 0 and key:
@@ -58,12 +61,14 @@ def SMDP_head(env, num_regions, num_actions, num_episodes, tasks, device):
                     option_idx = manager.option_indices[task][region][goal_region]
                 
 
-                transitions, reward, current_state, done, actual_end_region, steps = run_episode(env, state, worker, goal_region, region, region_num_states, Region_bound, task, total_steps_iteration, option_idx)
+                transitions, intended_transitions, reward, current_state, done, actual_end_region, steps, total_steps_iteration = run_episode(env, state, worker, goal_region, region, region_num_states, Region_bound, task, total_steps_iteration, option_idx)
                 total_steps_iteration += steps
 
                 if actual_end_region != goal_region and actual_end_region != region:
+                    intended_worker = worker
                     if actual_end_region not in manager.Q[task] and actual_end_region < num_regions + 1:
                         manager.add_region(actual_end_region, task)
+                    
                     if actual_end_region not in manager.Q[task][region]:
                         if actual_end_region > num_regions:
                             worker = manager.get_task_specific_worker(region, actual_end_region, region_num_states, num_actions, task)
@@ -105,11 +110,27 @@ def SMDP_head(env, num_regions, num_actions, num_episodes, tasks, device):
 
             if goal_region > num_regions or actual_end_region > num_regions:
                 option_idx = 0
+                option_intended_idx = 0
             else:
-                option_idx = manager.option_indices[task][region][goal_region]
+                #print(goal_region, actual_end_region)
+                if goal_region != actual_end_region and actual_end_region != 0 and region != actual_end_region:
+                    #print("not normal")
+                    #print(manager.option_indices)
+                    option_idx = manager.option_indices[task][region][actual_end_region]
+                    option_intended_idx = manager.option_indices[task][region][goal_region]
+                else:
+                    #print("normal")
+                    option_idx = manager.option_indices[task][region][goal_region]
+
                 
             total_steps += steps
             total_reward += reward
+            #print("task, region, actual_end, goal_region", task, region, actual_end_region, goal_region)
+            #print("intended_transitions", intended_transitions)
+            if intended_transitions:
+                intended_worker.train(intended_transitions, option_intended_idx)
+                for _ in range(4):
+                    intended_worker.train_sil(option_intended_idx)
 
             if transitions:
                 worker.train(transitions, option_idx)
@@ -127,9 +148,11 @@ def SMDP_head(env, num_regions, num_actions, num_episodes, tasks, device):
             state = current_state
 
             if done or total_steps > 300: 
+                print("total reward", total_reward)
                 total_reward_per_episode.append(total_reward)
                 break
         
+        print("SMDP_head")
         print_q_table(manager.Q)
         print_q_table(manager.option_indices)
         print("Episodes", episodes)
