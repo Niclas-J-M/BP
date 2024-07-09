@@ -112,11 +112,9 @@ class Worker_Head:
 ### Wrapper
 It is important to note that a wrapper has been added in the minigrid folder to run the code:
 
-'''python
+```python
 class NESWActionsImage(Wrapper):
-    """
-    we change the actions to be 0:N, 1:E, 2:S, 3:W
-    """
-'''
+    # We change the actions to be 0:N, 1:E, 2:S, 3:W
+```
 
 This function can be found in the 'wrapper.py' file
