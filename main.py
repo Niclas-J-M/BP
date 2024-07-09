@@ -8,7 +8,6 @@ import numpy as np
 from utils.utils import plot_rewards, plot_steps
 from gymnasium.envs.registration import register
 import torch
-import csv
 
 # Set the device to GPU if available, otherwise CPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
