@@ -41,11 +41,12 @@ This repository contains the implementation of the thesis looking into improving
 
 ## Dependencies
 
-- Python 3.7+
-- PyTorch
-- NumPy
-- Gymnasium (OpenAI Gym)
-- Matplotlib
+- Python 3.12.3
+- PyTorch 2.2.1
+- NumPy 2.0.0
+- Gymnasium (OpenAI Gym) 0.29.1
+- Matplotlib 3.5.0
+- minigrid (Add wrapper) 2.2.1
 
 ## Setup and Installation
 
@@ -69,7 +70,7 @@ To run the SMDP algorithm, execute the `main.py` file with the appropriate confi
 ```
 python main.py
 ```
-Also set the algorithm you want to  use in the python file (Multi-Headed neural network = Head, single neural network = Single, one network for each region = Naive)
+Also set the algorithm you want to use in the python file (Multi-Headed neural network = Head, single neural network = Single, one network for each region = Naive)
 Modify the `config.py` file to set different parameters such as learning rate, gamma, epsilon, etc.
 
 ## Code Overview
@@ -106,3 +107,15 @@ This class defines the worker that interacts with the environment using dynamic 
 class Worker_Head:
     # Implementation of the Worker_Head class
 ```
+
+### Wrapper
+It is important to note that a wrapper has been added in the minigrid folder to run the code:
+
+'''python
+class NESWActionsImage(Wrapper):
+    """
+    we change the actions to be 0:N, 1:E, 2:S, 3:W
+    """
+'''
+
+This function can be found in the 'wrapper.py' file
