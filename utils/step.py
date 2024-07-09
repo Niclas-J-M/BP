@@ -1,13 +1,33 @@
+# Import necessary libraries
 from utils.utils import coord_to_state, compression_function
 import random
 
-
-"""
-actions to be 0:N, 1:E, 2:S, 3:W
-"""
-
-
 def run_episode(env, state, worker, end_region, initial_region, num_states, Region_bound, task, total_steps_iteration, step_limit=6):
+    """
+    Run a single episode in the environment.
+
+    Parameters:
+    - env: The environment to run the episode in.
+    - state: Initial state of the agent.
+    - worker: The worker agent for selecting actions.
+    - end_region: The target region to reach.
+    - initial_region: The starting region of the agent.
+    - num_states: Total number of states.
+    - Region_bound: Dictionary with region boundaries.
+    - task: Task to accomplish (0: key, 1: door, 2: goal).
+    - total_steps_iteration: Number of steps taken in the current iteration.
+    - step_limit: Maximum steps allowed per episode.
+
+    Returns:
+    - transitions: List of state transitions.
+    - intended_transitions: List of intended state transitions.
+    - total_reward: Total reward earned in the episode.
+    - current_state: Final state of the agent.
+    - final_done: Boolean indicating if the final task is completed.
+    - actual_end_region: The actual region where the agent ends up.
+    - steps: Number of steps taken in the episode.
+    - total_steps_iteration: Updated step count for the iteration.
+    """
     state_vector = coord_to_state(state, num_states, Region_bound)
     done = False
     final_done = False
@@ -25,42 +45,33 @@ def run_episode(env, state, worker, end_region, initial_region, num_states, Regi
         else:
             # Choose the action suggested by the worker the rest of the time (80%)
             action = worker.select_action(state_vector)
+        
         next_state_coord, reward, done, _ = env.step(action)
         steps += 1
         key = env.key
         door = env.door
-        if task == 0:
-            if key:
-                total_reward = 1
-                done = True
-                next_state_vector = coord_to_state(next_state_coord, num_states, Region_bound)
-                transitions.append((state_vector, action, total_reward, next_state_vector, done))
-                actual_end_region = 101
-                total_steps_iteration = 0
-                return transitions, intended_transitions, total_reward, next_state_coord, final_done, actual_end_region, steps, total_steps_iteration
-        elif task == 1:
-            if door:
-                total_reward = 1
-                done = True
-                next_state_vector = coord_to_state(next_state_coord, num_states, Region_bound)
-                transitions.append((state_vector, action, total_reward, next_state_vector, done))
-                actual_end_region = 102
-                total_steps_iteration = 0
-                return transitions, intended_transitions, total_reward, next_state_coord, final_done, actual_end_region, steps, total_steps_iteration
-        elif task == 2:
-            if done:
-                final_done = True
-                total_reward = 1
-                done = True
-                next_state_vector = coord_to_state(next_state_coord, num_states, Region_bound)
-                transitions.append((state_vector, action, total_reward, next_state_vector, done))
-                actual_end_region = 103
-                total_steps_iteration = 0
-                return transitions, intended_transitions, total_reward, next_state_coord, final_done, actual_end_region, steps, total_steps_iteration
 
+        # Handle specific tasks
+        if task == 0 and key:
+            total_reward = 1
+            done = True
+            actual_end_region = 101
+        elif task == 1 and door:
+            total_reward = 1
+            done = True
+            actual_end_region = 102
+        elif task == 2 and done:
+            final_done = True
+            total_reward = 1
+            actual_end_region = 103
+
+        if done:
+            next_state_vector = coord_to_state(next_state_coord, num_states, Region_bound)
+            transitions.append((state_vector, action, total_reward, next_state_vector, done))
+            total_steps_iteration = 0
+            return transitions, intended_transitions, total_reward, next_state_coord, final_done, actual_end_region, steps, total_steps_iteration
 
         current_region = compression_function(next_state_coord, Region_bound)
-        #print("current_region", current_region)
 
         # Termination of option
         if current_region != initial_region:
@@ -69,7 +80,6 @@ def run_episode(env, state, worker, end_region, initial_region, num_states, Regi
             done = True
             next_state_vector = state_vector
             if current_region == end_region:
-                #print("well done", end_region)
                 actual_end_region = end_region
                 reward = 0.8
                 transitions.append((state_vector, action, reward, next_state_vector, done))
@@ -88,30 +98,51 @@ def run_episode(env, state, worker, end_region, initial_region, num_states, Regi
             total_reward -= 0.1
             total_steps_iteration = 0
 
-        #print("how often are you used")
         transitions.append((state_vector, action, reward, next_state_vector, done))
         state_vector = next_state_vector
 
     return transitions, intended_transitions, total_reward, current_state, final_done, actual_end_region, steps, total_steps_iteration
 
-
 def explore(env, state, initial_region, num_states, task, Region_bound, step_limit=6):
+    """
+    Explore the environment by taking random actions.
+
+    Parameters:
+    - env: The environment to explore.
+    - state: Initial state of the agent.
+    - initial_region: The starting region of the agent.
+    - num_states: Total number of states.
+    - task: Task to accomplish (0: key, 1: door, 2: goal).
+    - Region_bound: Dictionary with region boundaries.
+    - step_limit: Maximum steps allowed per exploration.
+
+    Returns:
+    - transitions: List of state transitions.
+    - total_reward: Total reward earned during exploration.
+    - initial_region: The starting region of the agent.
+    - next_region: The region where the agent ends up.
+    - next_state_coord: Final coordinates of the agent.
+    - final_done: Boolean indicating if the final task is completed.
+    - steps: Number of steps taken during exploration.
+    """
     current_state_vector = coord_to_state(state, num_states, Region_bound)
     transitions = []
     done = False
     total_reward = 0
     final_done = False
     steps = 0
+
     while not done and steps < step_limit:
         action = random.randint(0, 3)
         next_state_coord, reward, done, _ = env.step(action)
         steps += 1
         next_state_vector = coord_to_state(next_state_coord, num_states, Region_bound)
         next_region = compression_function(next_state_coord, Region_bound)
-        #print("iniitial_region", initial_region)
-        #print("next_region", next_region)
+
         key = env.key
         door = env.door
+
+        # Handle specific tasks
         if done:
             total_reward = 1
             final_done = True
@@ -129,9 +160,10 @@ def explore(env, state, initial_region, num_states, task, Region_bound, step_lim
             next_state_vector = current_state_vector
             reward = 0.8
             done = True
+
         if total_reward >= 0.9:
             reward = total_reward
+
         transitions.append((current_state_vector, action, reward, next_state_vector, done))
-    
-    
+
     return transitions, total_reward, initial_region, next_region, next_state_coord, final_done, steps

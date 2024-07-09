@@ -1,9 +1,18 @@
+# Import necessary libraries
 import torch
 import torch.nn as nn
-    
+
 class PolicyNetwork(nn.Module):
     def __init__(self, state_dim, action_dim):
+        """
+        Initialize the Policy Network.
+
+        Parameters:
+        - state_dim: Dimension of the input state.
+        - action_dim: Dimension of the output actions.
+        """
         super(PolicyNetwork, self).__init__()
+        # Define the network layers
         self.layers = nn.Sequential(
             nn.Linear(state_dim, 64),
             nn.ReLU(),
@@ -12,6 +21,15 @@ class PolicyNetwork(nn.Module):
         )
 
     def forward(self, x):
+        """
+        Forward pass through the Policy Network.
+
+        Parameters:
+        - x: Input state tensor.
+
+        Returns:
+        - probs: Output action probabilities.
+        """
         probs = self.layers(x)
         
         # Cap probabilities to avoid very low and very high values
@@ -24,7 +42,14 @@ class PolicyNetwork(nn.Module):
 
 class ValueNetwork(nn.Module):
     def __init__(self, state_dim):
+        """
+        Initialize the Value Network.
+
+        Parameters:
+        - state_dim: Dimension of the input state.
+        """
         super(ValueNetwork, self).__init__()
+        # Define the network layers
         self.layers = nn.Sequential(
             nn.Linear(state_dim, 64),
             nn.ReLU(),
@@ -32,5 +57,13 @@ class ValueNetwork(nn.Module):
         )
 
     def forward(self, x):
+        """
+        Forward pass through the Value Network.
+
+        Parameters:
+        - x: Input state tensor.
+
+        Returns:
+        - Output value tensor.
+        """
         return self.layers(x)
-    

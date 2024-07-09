@@ -1,9 +1,19 @@
+# Import necessary libraries
 from SMDP_naive.worker_naive import Worker
 import numpy as np
 from config import Config
 
 class NaiveManager:
     def __init__(self, num_states, num_actions, tasks, device):
+        """
+        Initialize the Naive Manager with parameters and configurations.
+
+        Parameters:
+        - num_states: Total number of states.
+        - num_actions: Total number of actions.
+        - tasks: List of tasks to manage.
+        - device: Device to run the computations on (CPU or GPU).
+        """
         self.device = device
         self.num_states = num_states
         self.num_actions = num_actions
@@ -11,64 +21,123 @@ class NaiveManager:
         self.alpha = Config.alpha  # Learning rate
         self.gamma = Config.gamma  # Discount factor
         self.tasks = tasks
-        self.Q = {task: {} for task in tasks}
+        self.Q = {task: {} for task in tasks}  # Q-table initialization
         self.general_workers = {}  # Single worker for general policies
         self.task_specific_workers = {}  # Separate workers for task-specific options
         self.state_space = set()
 
     def get_task_specific_worker(self, region_from, goal, n_states, n_actions, task):
+        """
+        Get or create a task-specific worker.
+
+        Parameters:
+        - region_from: Starting region.
+        - goal: Goal region.
+        - n_states: Number of states in the region.
+        - n_actions: Number of actions in the region.
+        - task: Specific task for the worker.
+
+        Returns:
+        - Worker instance for the specified task, region, and goal.
+        """
         if (task, region_from, goal) not in self.task_specific_workers:
             self.task_specific_workers[(task, region_from, goal)] = Worker(n_states, n_actions, self.device)
         return self.task_specific_workers[(task, region_from, goal)]
-    
 
     def get_create_region_option(self, region_from, n_states, n_actions):
-        if (region_from) not in self.general_workers:
-            self.general_workers[(region_from)] = Worker(n_states, n_actions, self.device)
-        return self.general_workers[(region_from)]
+        """
+        Get or create a general worker option for a region.
+
+        Parameters:
+        - region_from: Starting region.
+        - n_states: Number of states in the region.
+        - n_actions: Number of actions in the region.
+
+        Returns:
+        - Worker instance for the specified region.
+        """
+        if region_from not in self.general_workers:
+            self.general_workers[region_from] = Worker(n_states, n_actions, self.device)
+        return self.general_workers[region_from]
 
     def update_policy(self, task, region, option, reward, next_region):
-        if task in self.Q:
-            if next_region in self.Q[task]:
-                if not bool(self.Q[task][next_region]):
-                    return
-            else: return
-        else: return
+        """
+        Update the Q-policy for a given task and region.
 
-        max_next_q = np.max(list(self.Q[task][next_region].values())) # Get the max Q-value for the next region or 0 if empty
-        td_error = reward + self.gamma * max_next_q - self.Q[task][region][option]
-        self.Q[task][region][option] += self.alpha * td_error
+        Parameters:
+        - task: Specific task.
+        - region: Current region.
+        - option: Selected option.
+        - reward: Received reward.
+        - next_region: Next region.
+        """
+        if task in self.Q and next_region in self.Q[task] and self.Q[task][next_region]:
+            max_next_q = np.max(list(self.Q[task][next_region].values()))  # Max Q-value for next region
+            td_error = reward + self.gamma * max_next_q - self.Q[task][region][option]
+            self.Q[task][region][option] += self.alpha * td_error
 
     def select_action(self, region, task):
-        # Epsilon-greedy policy for action selection    
+        """
+        Select an action using epsilon-greedy policy.
+
+        Parameters:
+        - region: Current region.
+        - task: Specific task.
+
+        Returns:
+        - Selected action (option).
+        """
         if np.random.random() < self.epsilon:
             return np.random.choice(list(self.Q[task][region].keys()))
         else:
             return max(self.Q[task][region], key=self.Q[task][region].get)
 
     def decay_epsilon(self):
-        # Decay exploration rate
+        """
+        Decay the exploration rate (epsilon) over time.
+        """
         self.epsilon *= Config.epsilon_decay
         self.epsilon = max(self.epsilon, Config.epsilon_min)
 
     def add_region(self, region, task):
-        if region not in self.Q[task]:
-            if region < self.num_states + 1:
-                for n_task in self.tasks:
-                    self.Q[n_task][region] = { } 
+        """
+        Add a region to the Q-table for all tasks.
 
-    def add_option(self, initital_region, goal_region, task):
+        Parameters:
+        - region: Region to add.
+        - task: Specific task.
+        """
+        if region not in self.Q[task] and region < self.num_states + 1:
+            for n_task in self.tasks:
+                self.Q[n_task][region] = {}
+
+    def add_option(self, initial_region, goal_region, task):
+        """
+        Add an option to the Q-table for a specific task and region.
+
+        Parameters:
+        - initial_region: Starting region.
+        - goal_region: Goal region.
+        - task: Specific task.
+        """
         if goal_region < self.num_states + 1:
             for n_task in self.tasks:
-                if initital_region != goal_region:
-                    self.Q[n_task][initital_region][goal_region] = 0.0
+                if initial_region != goal_region:
+                    self.Q[n_task][initial_region][goal_region] = 0.0
         else:
-            self.Q[task][initital_region][goal_region] = 0.0
+            self.Q[task][initial_region][goal_region] = 0.0
 
     def options_in_state_space(self, region, task):
-        if task in self.Q:
-        # Check if the region is in the Q-table for the specified task
-            if region in self.Q[task]:
-            # Check if there are any options defined for this task and region
-                return bool(self.Q[task][region])
+        """
+        Check if there are options defined in the Q-table for a given task and region.
+
+        Parameters:
+        - region: Region to check.
+        - task: Specific task.
+
+        Returns:
+        - Boolean indicating if options exist for the task and region.
+        """
+        if task in self.Q and region in self.Q[task]:
+            return bool(self.Q[task][region])
         return False

@@ -1,3 +1,4 @@
+# Import necessary libraries
 import numpy as np
 import random
 from utils.utils import compression_function, print_q_table
@@ -6,26 +7,40 @@ from utils.step_head import run_episode, explore
 from SMDP_head.manager_head import Manager_Head
 
 def SMDP_head(env, num_regions, num_actions, num_episodes, tasks, device):
-    
+    """
+    Run the SMDP head algorithm in the given environment.
+
+    Parameters:
+    - env: The environment to run the algorithm in.
+    - num_regions: Number of regions to divide the state space into.
+    - num_actions: Number of possible actions in the environment.
+    - num_episodes: Number of episodes to run.
+    - tasks: List of tasks to accomplish.
+    - device: Device to run the computations on (CPU or GPU).
+
+    Returns:
+    - total_steps_per_episode: List of total steps taken in each episode.
+    - total_reward_per_episode: List of total rewards received in each episode.
+    """
     size = env.unwrapped.width
-    Region_bound = create_regions(size, num_regions)
+    Region_bound = create_regions(size, num_regions)  # Create regions in the state space
     print(Region_bound)
-    manager = Manager_Head(num_regions, num_actions, tasks, device)
-    rand_seed = random.randint(1, 100)
+    manager = Manager_Head(num_regions, num_actions, tasks, device)  # Initialize manager
+    rand_seed = random.randint(1, 100)  # Random seed for environment reset
     task = 0
 
     total_steps_per_episode = []
     total_reward_per_episode = []
+
     for episodes in range(num_episodes):
         state = env.reset(seed=rand_seed)
         task = 0
         total_steps = 0
         total_reward = 0
         total_steps_iteration = 0
-        
+
         region = compression_function(state, Region_bound)
-        region_num_states =  (Region_bound[region][1][1] - Region_bound[region][0][1] + 1) * (Region_bound[region][1][0] - Region_bound[region][0][0] + 1)
-        print("Spawn Region", region)
+        region_num_states = (Region_bound[region][1][1] - Region_bound[region][0][1] + 1) * (Region_bound[region][1][0] - Region_bound[region][0][0] + 1)
         manager.add_region(region, task)
 
         while True:
@@ -33,6 +48,8 @@ def SMDP_head(env, num_regions, num_actions, num_episodes, tasks, device):
             intended_transitions = []
             intended_worker = None
             option_intended_idx = None
+
+            # Task progression logic
             key = env.key
             door = env.door
             if task == 0 and key:
@@ -41,12 +58,13 @@ def SMDP_head(env, num_regions, num_actions, num_episodes, tasks, device):
                 task = 2
 
             region = compression_function(state, Region_bound)
-            region_num_states =  (Region_bound[region][1][1] - Region_bound[region][0][1] + 1) * (Region_bound[region][1][0] - Region_bound[region][0][0] + 1)
+            region_num_states = (Region_bound[region][1][1] - Region_bound[region][0][1] + 1) * (Region_bound[region][1][0] - Region_bound[region][0][0] + 1)
             sqrt_num = int(np.sqrt(region_num_states))
             if sqrt_num * sqrt_num != region_num_states:
                 print("Error: regions are not perfect squares")
                 return
 
+            # Check if options exist in state space
             if manager.options_in_state_space(region, task):
                 goal_region = manager.select_action(region, task)
 
@@ -59,7 +77,6 @@ def SMDP_head(env, num_regions, num_actions, num_episodes, tasks, device):
                     option_idx = 0
                 else:
                     option_idx = manager.option_indices[task][region][goal_region]
-                
 
                 transitions, intended_transitions, reward, current_state, done, actual_end_region, steps, total_steps_iteration = run_episode(env, state, worker, goal_region, region, region_num_states, Region_bound, task, total_steps_iteration, option_idx)
                 total_steps_iteration += steps
@@ -112,26 +129,22 @@ def SMDP_head(env, num_regions, num_actions, num_episodes, tasks, device):
                 option_idx = 0
                 option_intended_idx = 0
             else:
-                #print(goal_region, actual_end_region)
                 if goal_region != actual_end_region and actual_end_region != 0 and region != actual_end_region:
-                    #print("not normal")
-                    #print(manager.option_indices)
                     option_idx = manager.option_indices[task][region][actual_end_region]
                     option_intended_idx = manager.option_indices[task][region][goal_region]
                 else:
-                    #print("normal")
                     option_idx = manager.option_indices[task][region][goal_region]
 
-                
             total_steps += steps
             total_reward += reward
-            #print("task, region, actual_end, goal_region", task, region, actual_end_region, goal_region)
-            #print("intended_transitions", intended_transitions)
+
+            # Train intended worker
             if intended_transitions:
                 intended_worker.train(intended_transitions, option_intended_idx)
                 for _ in range(4):
                     intended_worker.train_sil(option_intended_idx)
 
+            # Train worker
             if transitions:
                 worker.train(transitions, option_idx)
                 for _ in range(4):
@@ -144,19 +157,16 @@ def SMDP_head(env, num_regions, num_actions, num_episodes, tasks, device):
                 option = actual_end_region
                 goal_region = region
 
-            manager.update_policy(task, region, option, reward, goal_region) 
+            manager.update_policy(task, region, option, reward, goal_region)
             state = current_state
 
-            if done or total_steps > 300: 
-                print("total reward", total_reward)
+            if done or total_steps > 300:
                 total_reward_per_episode.append(total_reward)
                 break
         
-        print("SMDP_head")
         print_q_table(manager.Q)
-        print_q_table(manager.option_indices)
         print("Episodes", episodes)
-        print("total steps", total_steps)
+        print("Total steps", total_steps)
         
         total_steps_per_episode.append(total_steps)
         manager.decay_epsilon()
