@@ -12,6 +12,7 @@ This repository contains the implementation of my Bachelor Project and the thesi
     - [Policy and Value Networks](#policy-and-value-networks)
     - [Managers](#managers)
     - [Workers](#workers)
+    - [Wrapper](#Wrapper)
 
 ## Project Structure
 
