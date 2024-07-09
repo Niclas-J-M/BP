@@ -110,7 +110,7 @@ class Worker_Head:
 ```
 
 ### Wrapper
-It is important to note that a wrapper has been added in the minigrid folder to run the code:
+It is important to note that a wrapper has been added in the minigrid/wrapper file to run the code:
 
 ```python
 class NESWActionsImage(Wrapper):
