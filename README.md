@@ -1,6 +1,6 @@
 # SMDP Efficiency Reinforcement Learning Project
 
-This repository contains the implementation of the thesis looking into improving the efficiency of a Semi-Markov Decision Process (SMDP) based reinforcement learning algorithm. The project includes various components such as policy and value networks, managers for different SMDP variations, and utilities for running episodes and training the models.
+This repository contains the implementation of my Bachelor Project and the thesis looking into improving the efficiency of a Semi-Markov Decision Process (SMDP) based reinforcement learning algorithm. The project includes various components such as policy and value networks, managers for different SMDP variations, and utilities for running episodes and training the models.
 
 ## Table of Contents
 
