@@ -37,6 +37,7 @@ This repository contains the implementation of my Bachelor Project and the thesi
 │   ├── prioritized_memory.py
 ├── config.py
 ├── main.py
+├── requirements.txt
 └── README.md
 ```
 
