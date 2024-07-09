@@ -12,6 +12,7 @@ This repository contains the implementation of the thesis looking into improving
     - [Policy and Value Networks](#policy-and-value-networks)
     - [Managers](#managers)
     - [Workers](#workers)
+    - [Wrapper](#wrapper)
 
 ## Project Structure
 
