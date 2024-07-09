@@ -1,6 +1,6 @@
 # SMDP Efficiency Reinforcement Learning Project
 
-This repository contains the implementation of the thesis looking into improving the efficiency of a Semi-Markov Decision Process (SMDP) based reinforcement learning algorithm. The project includes various components such as policy and value networks, managers for different SMDP variations, and utilities for running episodes and training the models.
+This repository contains the implementation of my Bachelor Project and the thesis looking into improving the efficiency of a Semi-Markov Decision Process (SMDP) based reinforcement learning algorithm. The project includes various components such as policy and value networks, managers for different SMDP variations, and utilities for running episodes and training the models.
 
 ## Table of Contents
 
@@ -12,7 +12,6 @@ This repository contains the implementation of the thesis looking into improving
     - [Policy and Value Networks](#policy-and-value-networks)
     - [Managers](#managers)
     - [Workers](#workers)
-    - [Wrapper](#wrapper)
 
 ## Project Structure
 
@@ -37,6 +36,7 @@ This repository contains the implementation of the thesis looking into improving
 │   ├── prioritized_memory.py
 ├── config.py
 ├── main.py
+├── requirements.txt
 └── README.md
 ```
 
@@ -110,13 +110,11 @@ class Worker_Head:
 ```
 
 ### Wrapper
-It is important to note that a wrapper has been added in the minigrid folder to run the code:
+It is important to note that a wrapper has been added in the minigrid/wrapper file to run the code:
 
-'''python
+```python
 class NESWActionsImage(Wrapper):
-    """
-    we change the actions to be 0:N, 1:E, 2:S, 3:W
-    """
-'''
+    # We change the actions to be 0:N, 1:E, 2:S, 3:W
+```
 
 This function can be found in the 'wrapper.py' file
