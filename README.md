@@ -54,8 +54,8 @@ This repository contains the implementation of my Bachelor Project and the thesi
 
 1. Clone the repository:
     ```
-    git clone https://github.com/Niclas-J-M/BP.git
-    cd BP
+    git clone https://github.com/Niclas-J-M/BachelorProject.git
+    cd BachelorProject
     ```
 
 2. Install the required dependencies:
